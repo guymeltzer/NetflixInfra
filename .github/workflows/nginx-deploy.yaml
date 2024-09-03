@@ -27,6 +27,7 @@ jobs:
         run: |
           echo "$SSH_PRIVATE_KEY" > mykey.pem
           chmod 400 mykey.pem
+          echo mykey.pem
           scp -o StrictHostKeyChecking=no -i mykey.pem nginx-config/default.conf ubuntu@51.20.79.83:/etc/nginx/conf.d/default.conf
 
       - name: Restart Nginx
