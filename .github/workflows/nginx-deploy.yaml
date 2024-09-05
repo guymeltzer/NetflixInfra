@@ -1,35 +1,35 @@
-name: Deploy Nginx and App
+name: Deploy Nginx Configuration
 
 on:
   push:
     branches:
       - main
 env:
-  EC2_PUBLIC_IP: 51.20.79.83
+  EC2_PUBLIC_IP: 13.60.254.26
   SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Deploy Nginx Configuration
-        run: |
+    - name: SSH to EC2 instance
+      run: |
           echo "$SSH_PRIVATE_KEY" > mykey.pem
           chmod 400 mykey.pem
-          echo mykey.pem
-          scp -o StrictHostKeyChecking=no -i mykey.pem nginx-config/default.conf ubuntu@51.20.79.83:/home/ubuntu
-          ssh -i mykey.pem ubuntu@13.60.254.26 'sudo mv /home/ubuntu/default.conf /etc/nginx/conf.d/default.conf'
-      - name: Restart Nginx
-        run: |
-          ssh -i mykey.pem ubuntu@51.20.79.83 'sudo systemctl restart nginx'
-          
+          cat mykey.pem
+
+    - name: Set up SSH Agent
+      uses: webfactory/ssh-agent@v0.5.4
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - name: Transfer Nginx Config Files
+      run: |
+        scp -i mykey.pem -o StrictHostKeyChecking=no nginx-config/default.conf ubuntu@$EC2_PUBLIC_IP:/home/ubuntu
+        ssh -i mykey.pem -o StrictHostKeyChecking=no ubuntu@$EC2_PUBLIC_IP 'sudo mv /home/ubuntu/default.conf /etc/nginx/conf.d/default.conf'
+    - name: Restart Nginx Service
+      run: |
+        ssh -i mykey.pem -o StrictHostKeyChecking=no ubuntu@$EC2_PUBLIC_IP 'sudo systemctl restart nginx'
