@@ -32,3 +32,8 @@ jobs:
     - name: Restart Nginx Service
       run: |
         ssh -i mykey.pem -o StrictHostKeyChecking=no ubuntu@$EC2_PUBLIC_IP 'sudo systemctl restart nginx'
+    - name: Check Nginx Status (on failure)
+      if: failure()
+      run: |
+          ssh -o StrictHostKeyChecking=no -i mykey.pem ubuntu@$EC2_PUBLIC_IP 'sudo systemctl status nginx.service'
+          ssh -o StrictHostKeyChecking=no -i mykey.pem ubuntu@$EC2_PUBLIC_IP 'sudo journalctl -xeu nginx.service'
