@@ -1,0 +1,101 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8080:80"
+    networks:
+      - public_network
+    environment:
+      - NGINX_HOST=netflix-frontend
+    depends_on:
+      - netflix-frontend
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+  netflix-frontend:
+    image: guymeltzer/nf:1.0.3
+    container_name: netflix-frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - public_network
+      - private_network
+    depends_on:
+      - netflix-catalog
+    environment:
+      MOVIE_CATALOG_SERVICE: http://netflix-catalog:8080
+
+  netflix-catalog:
+    image: guymeltzer/netflix-catalog:latest
+    container_name: netflix-catalog
+    networks:
+      - private_network
+    volumes:
+      - catalog-data:/data  # Persist Netflix catalog data to a volume
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    networks:
+      - private_network2
+    volumes:
+      - /home/ubuntu/prometheus.yml:/etc/prometheus/prometheus.yml:ro  # Make sure the file is read-only
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    #entrypoint: >
+    #  sh -c "chown -R 65534:65534 /prometheus &&
+    #  exec /bin/prometheus"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    networks:
+      - private_network2
+    ports:
+      - "3001:3000"  # Adjust port if frontend is using 3000
+    volumes:
+      - grafana-data:/var/lib/grafana  # Persist Grafana data to a volume
+    depends_on:
+      - prometheus
+    entrypoint: >
+      sh -c "chown -R 472:472 /var/lib/grafana && 
+      exec /run.sh"
+
+  availability-agent:
+    image: guymeltzer/availability_agent:1.0.0
+    hostname: availability-agent
+    container_name: availability-agent
+    networks:
+      - private_network2
+      - public_network
+    depends_on:
+      - prometheus
+    environment:
+      MONITORED_HOST: http://netflix-frontend:3000
+
+networks:
+  public_network:
+    driver: bridge
+  private_network:
+    driver: bridge
+  private_network2:
+    driver: bridge
+
+volumes:
+  catalog-data:
+    driver_opts:
+      type: none
+      device: /mnt/ebs/catalog-data
+      o: bind
+  prometheus-data:
+    driver_opts:
+      type: none
+      device: /mnt/ebs/prometheus-data
+      o: bind
+  grafana-data:
+    driver_opts:
+      type: none
+      device: /mnt/ebs/grafana-data
+      o: bind
