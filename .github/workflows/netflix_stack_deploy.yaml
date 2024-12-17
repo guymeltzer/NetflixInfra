@@ -22,7 +22,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Update docker-compose.yaml
+      - name: Update docker-compose.yml
         run: |
          yq e ".services.${{ github.event.inputs.service_name }}.image = \"${{ github.event.inputs.image }}\"" -i docker-compose.yaml
 
@@ -32,7 +32,7 @@ jobs:
           git config --local user.email "omerkanias160@gmail.com"
           git config --local user.name "omerk160"
 
-          git add docker-compose.yaml
+          git add docker-compose.yml
           git commit -m "Update ${{ github.event.inputs.service_name }} image to ${{ github.event.inputs.image }}"
           git push origin main
 
