@@ -38,7 +38,7 @@ jobs:
 
           git add docker-compose.yaml && git commit -m "Update ${{ github.event.inputs.service_name }} image to ${{ github.event.inputs.image }}"
           git push origin main --force
-      
+     #
   Deploy:
     name: Deploy a Netflix stack service
     runs-on: ubuntu-latest
