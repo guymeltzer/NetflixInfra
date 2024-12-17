@@ -28,7 +28,8 @@ jobs:
           SERVICE_NAME: ${{ github.event.inputs.service_name }}
           IMAGE_NAME: ${{ github.event.inputs.image }}
         with:
-          cmd: yq e ".services.${SERVICE_NAME}.image = \"${IMAGE_NAME}\"" -i docker-compose.yaml
+          cmd: |
+            yq e ".services.${SERVICE_NAME}.image = \"${IMAGE_NAME}\"" -i docker-compose.yaml
       
       - name: commit and push
         run: |
