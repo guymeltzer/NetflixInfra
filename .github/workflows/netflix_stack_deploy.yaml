@@ -45,7 +45,7 @@ jobs:
 
       - name: Update the Docker Compose project in the EC2
         env:
-          EC2_PUBLIC_IP: "51.20.248.149"
+          EC2_PUBLIC_IP: ${EC2_PUBLIC_IP}
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.EC2_PUBLIC_IP }}
