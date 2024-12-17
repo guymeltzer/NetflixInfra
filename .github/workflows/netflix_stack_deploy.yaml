@@ -24,7 +24,7 @@ jobs:
 
       - name: Update docker-compose.yml
         run: |
-         yq e ".services.${{ github.event.inputs.service_name }}.image = \"${{ github.event.inputs.image }}\"" -i docker-compose.yaml
+         yq e ".services.${{ github.event.inputs.service_name }}.image = \"${{ github.event.inputs.image }}\"" -i docker-compose.yml
 
 
       - name: Commit and push changes
