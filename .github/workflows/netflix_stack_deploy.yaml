@@ -24,27 +24,28 @@ jobs:
         
       - name: Update docker-compose.yaml
         uses: mikefarah/yq@master
-        env: 
-          SERVICE_NAME: ${{ github.event.inputs.service_name }}
-          IMAGE_NAME: ${{ github.event.inputs.image }}
         with:
           run: |
             yq e ".services.\"${{ github.event.inputs.service_name }}\".image = \"${{ github.event.inputs.image }}\"" -i docker-compose.yaml
-      
-      - name: commit and push
+
+      - name: Commit and Push
         run: |
           git config --local user.email "github@actions"
           git config --local user.name "auto-test"
-
           git add docker-compose.yaml && git commit -m "Update ${{ github.event.inputs.service_name }} image to ${{ github.event.inputs.image }}"
           git push origin main --force
-     #
+
   Deploy:
     name: Deploy a Netflix stack service
     runs-on: ubuntu-latest
+    env:
+      EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
     steps:
       - name: Checkout the repo code
         uses: actions/checkout@v2
+
+      - name: Debug EC2_PUBLIC_IP
+        run: echo "EC2_PUBLIC_IP is ${{ env.EC2_PUBLIC_IP }}"
 
       - name: Update the Docker Compose project in the EC2
         uses: appleboy/ssh-action@master
