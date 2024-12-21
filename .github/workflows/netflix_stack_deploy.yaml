@@ -53,7 +53,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             repo_dir=${{ github.event.inputs.service_name }}_${GITHUB_RUN_ID}
-            git clone https://github.com/${GITHUB_REPOSITORY} $repo_dir
+            git clone https://github.com/guymeltzer/${GITHUB_REPOSITORY} $repo_dir
 
             cd $repo_dir
 
