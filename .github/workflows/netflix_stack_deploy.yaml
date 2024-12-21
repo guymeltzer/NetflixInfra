@@ -53,9 +53,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             repo_dir=${{ github.event.inputs.service_name }}_${GITHUB_RUN_ID}
-            git clone https://github.com/guymeltzer ${repo_dir}
-            echo $GITHUB_REPOSITORY
-            cd $repo_dir
+            git clone https://github.com/guymeltzer
+            cd guymeltzer
 
             service_name=${{ github.event.inputs.service_name }}
             docker compose up -d $service_name
