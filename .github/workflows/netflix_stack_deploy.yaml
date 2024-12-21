@@ -61,7 +61,7 @@ jobs:
             service_name=netflix-catalog
 
             # Run the Docker Compose service
-            docker-compose up -d $service_name
+            docker compose up -d $service_name
 
             echo "Deploy completed."
   
