@@ -29,8 +29,8 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          git config --local user.email "omerkanias160@gmail.com"
-          git config --local user.name "omerk160"
+          git config --local user.email "guymeltzer28@gmail.com"
+          git config --local user.name "guymeltzer"
 
           git add docker-compose.yml
           git commit -m "Update ${{ github.event.inputs.service_name }} image to ${{ github.event.inputs.image }}"
@@ -45,7 +45,7 @@ jobs:
 
       - name: Update the Docker Compose project in the EC2
         env:
-          EC2_PUBLIC_IP: "13.60.72.79"
+          EC2_PUBLIC_IP: "13.49.46.107"
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.EC2_PUBLIC_IP }}
