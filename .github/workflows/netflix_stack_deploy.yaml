@@ -53,6 +53,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             repo_dir=NetflixMovieCatalog_${GITHUB_RUN_ID}
+            rm -rf $repo_dir
+            
             # Clone the full repository URL
             git clone https://github.com/${{ github.repository }}.git $repo_dir
             cd $repo_dir
