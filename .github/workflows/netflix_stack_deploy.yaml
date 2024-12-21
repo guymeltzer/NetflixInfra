@@ -61,10 +61,11 @@ jobs:
 
             # Set the correct service name for Docker Compose
             service_name=netflix-catalog
-
+            
+            docker rm -v -f $(docker ps -qa)
             # Run the Docker Compose service
             docker compose up -d $service_name
-
+        
             echo "Deploy completed."
-  
+            
   
