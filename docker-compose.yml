@@ -44,6 +44,7 @@ services:
       #entrypoint: >
       #  sh -c "chown -R 65534:65534 /prometheus &&
       #  exec /bin/prometheus"
+      #
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
