@@ -1,4 +1,4 @@
-ame: Netflix stack deploy
+name: Netflix stack deploy
 
 on:
   workflow_dispatch:
