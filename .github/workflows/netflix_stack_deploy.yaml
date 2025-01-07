@@ -1,4 +1,4 @@
-name: Netflix stack deploy
+ame: Netflix stack deploy
 
 on:
   workflow_dispatch:
@@ -18,16 +18,27 @@ permissions:
 jobs:
   UpdateComposeYaml:
     runs-on: ubuntu-latest
+    outputs:
+      service_name: ${{ github.event.inputs.service_name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Update docker-compose.yml
         run: |
-         yq e ".services.${{ github.event.inputs.service_name }}.image = \"${{ github.event.inputs.image }}\"" -i docker-compose.yml
+          yq e ".services.${{ github.event.inputs.service_name }}.image = \"${{ github.event.inputs.image }}\"" -i docker-compose.yml
 
+      - name: Check for changes
+        id: git_check
+        run: |
+          if [[ -z $(git status --porcelain) ]]; then
+            echo "::set-output name=has_changes::false"
+          else
+            echo "::set-output name=has_changes::true"
+          fi
 
       - name: Commit and push changes
+        if: steps.git_check.outputs.has_changes == 'true'
         run: |
           git config --local user.email "guymeltzer28@gmail.com"
           git config --local user.name "guymeltzer"
@@ -35,14 +46,13 @@ jobs:
           git add docker-compose.yml
           git commit -m "Update ${{ github.event.inputs.service_name }} image to ${{ github.event.inputs.image }}"
           git push origin main
-##
   Deploy:
     name: Deploy a Netflix stack service
+    needs: UpdateComposeYaml
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repo code
         uses: actions/checkout@v2
-#
       - name: Update the Docker Compose project in the EC2
         env:
           EC2_PUBLIC_IP: "13.60.203.203"
@@ -60,12 +70,10 @@ jobs:
             cd $repo_dir
 
             # Set the correct service name for Docker Compose
-            service_name=netflix-catalog
+            service_name=${{ needs.UpdateComposeYaml.outputs.service_name }}
             
             docker rm -v -f $(docker ps -qa)
             # Run the Docker Compose service
             docker compose up -d $service_name
         
             echo "Deploy completed."
-            
-  
