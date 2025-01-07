@@ -25,7 +25,7 @@ services:
     environment:
       MOVIE_CATALOG_SERVICE: http://netflix-catalog:8080
   netflix-catalog:
-    image: guymeltzer/netflix-movie-catalog:5
+    image: guymeltzer/netflix-movie-catalog
     container_name: netflix-catalog
     networks:
       - private_network
