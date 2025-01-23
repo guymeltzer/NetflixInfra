@@ -11,7 +11,7 @@ spec:
         - guy-netflix-lb-303645713.eu-north-1.elb.amazonaws.com
       # This assumes tls-secret exists and the SSL
       # certificate contains a CN for foo.bar.com
-      secretName: guycert
+      secretName: ingress-nginx/guycert
   ingressClassName: nginx
   rules:
     - host: foo.bar.com
