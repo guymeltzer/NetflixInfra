@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: netflix-frontend
-        image: guymeltzer/nf:f1c0ab2
+        image: guymeltzer/nf:13
         ports:
         - containerPort: 3000
         env:
