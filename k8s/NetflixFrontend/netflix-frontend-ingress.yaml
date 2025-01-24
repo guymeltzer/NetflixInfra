@@ -4,6 +4,10 @@ metadata:
   name: netflix-frontend
 
 spec:
+  tls:
+    - hosts:
+        - guy-netflix-lb-303645713.eu-north-1.elb.amazonaws.com
+      secretName: guycert
   ingressClassName: nginx
   rules:
     - host:  guy-netflix-lb-303645713.eu-north-1.elb.amazonaws.com
