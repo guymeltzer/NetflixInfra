@@ -26,6 +26,8 @@ spec:
           value: https://sqs.eu-north-1.amazonaws.com/352708296901/Guy-Queue
         - name: AWS_REGION
           value: eu-north-1
+        - name: AWS_SNS_TOPIC_ARN
+          value: arn:aws:sns:eu-north-1:352708296901:Guy-netflix-event-topic
 
 
 ---
