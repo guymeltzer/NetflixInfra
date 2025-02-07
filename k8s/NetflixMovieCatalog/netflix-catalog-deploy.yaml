@@ -7,8 +7,8 @@ spec:
     spec:
       containers:
         - name: data-loader
-          image: guymeltzer/netflix-movie-catalog:10
-          command: ["python3", "/app/data_loader.py"]
+          image: guymeltzer/netflix-movie-catalog:11
+          command: ["python3", "data_loader.py"]
       restartPolicy: Never
   backoffLimit: 2
 ---
