@@ -1,3 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-loader
+spec:
+  template:
+    spec:
+      containers:
+        - name: data-loader
+          image: guymeltzer/netflix-movie-catalog:10
+          command: ["python3", "/app/data_loader.py"]
+      restartPolicy: Never
+  backoffLimit: 2
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,7 +30,7 @@ spec:
     spec:
       containers:
       - name: netflix-catalog
-        image: guymeltzer/netflix-movie-catalog:10
+        image: guymeltzer/netflix-movie-catalog:11
 
 ---
 apiVersion: v1
