@@ -1,0 +1,44 @@
+name: Terraform Infrastructure Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment Environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+      region:
+        description: 'AWS Region'
+        required: true
+        type: choice
+        options:
+          - eu-central-1
+          - eu-north-1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ github.event.inputs.region }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan -var-file=${{ github.event.inputs.environment }}.tfvars
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
