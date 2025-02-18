@@ -15,18 +15,29 @@ terraform {
   }
 }
 
-data "aws_secretsmanager_secret" "aws_credentials" {
-  name = "aws-credentials"
+variable "secret_name" {
+  description = "The name of the secret"
+  type        = string
+  default     = "guy-netflix-bot-token"
 }
 
-data "aws_secretsmanager_secret_version" "aws_credentials" {
-  secret_id = data.aws_secretsmanager_secret.aws_credentials.id
+variable "secret_value" {
+  description = "The value of the secret"
+  type        = string
+  sensitive   = true
 }
 
 provider "aws" {
   region = var.region
-  access_key = jsondecode(data.aws_secretsmanager_secret_version.aws_credentials.secret_string)["AWS_ACCESS_KEY_ID"]
-  secret_key = jsondecode(data.aws_secretsmanager_secret_version.aws_credentials.secret_string)["AWS_SECRET_ACCESS_KEY"]
+}
+
+resource "aws_secretsmanager_secret" "bot_token" {
+  name = var.secret_name
+}
+
+resource "aws_secretsmanager_secret_version" "bot_token" {
+  secret_id     = aws_secretsmanager_secret.bot_token.id
+  secret_string = var.secret_value
 }
 
 resource "aws_key_pair" "netflix_key" {
