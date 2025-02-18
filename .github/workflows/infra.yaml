@@ -59,9 +59,11 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
         run: |
           terraform apply -auto-approve \
             -var "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" \
             -var "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" \
+            -var "ssh_public_key=$SSH_PUBLIC_KEY" \
             -var-file=${{ github.event.inputs.environment }}.tfvars
         working-directory: terraform
