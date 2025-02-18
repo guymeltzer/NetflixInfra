@@ -76,7 +76,7 @@ resource "aws_instance" "netflix_app" {
 }
 
 resource "aws_security_group" "netflix_app_sg" {
-  name        = "guy-netflix-app-sg"
+  name        = "guy-netflix-stack-sg"
   description = "Allow SSH and HTTP traffic"
 
   ingress {
