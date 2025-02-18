@@ -38,6 +38,9 @@ jobs:
         run: terraform init -reconfigure
         working-directory: ./terraform
 
+      - name: Debug Directory Structure
+        run: ls -R
+
       - name: Terraform Plan
         run: terraform plan -var-file=./terraform/${{ github.event.inputs.environment }}.tfvars
         working-directory: ./terraform
