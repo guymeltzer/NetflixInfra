@@ -27,8 +27,20 @@ variable "secret_value" {
   sensitive   = true
 }
 
+variable "AWS_ACCESS_KEY_ID" {
+  type      = string
+  sensitive = true
+}
+
+variable "AWS_SECRET_ACCESS_KEY" {
+  type      = string
+  sensitive = true
+}
+
 provider "aws" {
-  region = var.region
+  region     = var.region
+  access_key = var.AWS_ACCESS_KEY_ID
+  secret_key = var.AWS_SECRET_ACCESS_KEY
 }
 
 resource "aws_secretsmanager_secret" "bot_token" {
