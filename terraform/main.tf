@@ -52,9 +52,13 @@ resource "aws_secretsmanager_secret_version" "bot_token" {
   secret_string = var.secret_value
 }
 
+variable "ssh_public_key" {
+  type = string
+}
+
 resource "aws_key_pair" "netflix_key" {
   key_name   = "id_rsa"
-  public_key = file("/home/guy/.ssh/id_rsa.pub")
+  public_key = var.ssh_public_key
 }
 
 resource "aws_instance" "netflix_app" {
