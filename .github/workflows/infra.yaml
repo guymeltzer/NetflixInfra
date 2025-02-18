@@ -41,10 +41,9 @@ jobs:
         working-directory: ./terraform
 
       - name: Terraform Plan
-        run: |
-          cd ./terraform
-          terraform plan -var-file=${{ github.event.inputs.environment }}.tfvars
+        run: terraform plan -var-file=${{ github.event.inputs.environment }}.tfvars
         working-directory: terraform
+
 
 
       - name: Terraform Apply
