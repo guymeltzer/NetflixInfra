@@ -40,7 +40,7 @@ jobs:
 
       - name: Terraform Plan
         run: |
-          cd terraform
+          cd ./terraform
           terraform plan -var-file=./terraform/${{ github.event.inputs.environment }}.tfvars
         working-directory: ./terraform
 
