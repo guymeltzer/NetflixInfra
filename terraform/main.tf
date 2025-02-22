@@ -15,42 +15,14 @@ terraform {
   }
 }
 
-variable "secret_name" {
-  description = "The name of the secret"
-  type        = string
-  default     = "guy-netflix-bot-token"
-}
-
-variable "secret_value" {
-  description = "The value of the secret"
-  type        = string
-  sensitive   = true
-}
-
-variable "AWS_ACCESS_KEY_ID" {
-  type      = string
-  sensitive = true
-}
-
-variable "AWS_SECRET_ACCESS_KEY" {
-  type      = string
-  sensitive = true
-}
 
 provider "aws" {
   region     = var.region
-  access_key = var.AWS_ACCESS_KEY_ID
-  secret_key = var.AWS_SECRET_ACCESS_KEY
-}
-
-
-variable "ssh_public_key" {
-  type = string
 }
 
 resource "aws_key_pair" "netflix_key" {
-  key_name   = "id_rsa"
-  public_key = var.ssh_public_key
+  key_name   = "netflix_key"                         # Name of the key pair
+  public_key = file("./id_rsa.pub") # Path to the public key file
 }
 
 resource "aws_instance" "netflix_app" {
