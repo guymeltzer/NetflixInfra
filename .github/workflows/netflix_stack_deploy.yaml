@@ -17,8 +17,35 @@ permissions:
 
 jobs:
   UpdateComposeYaml:
-  # ... (keep this job as is)
+    runs-on: ubuntu-latest
+    outputs:
+      service_name: ${{ github.event.inputs.service_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
+      - name: Update docker-compose.yml
+        run: |
+          yq e ".services.${{ github.event.inputs.service_name }}.image = \"${{ github.event.inputs.image }}\"" -i docker-compose.yml
+
+      - name: Check for changes
+        id: git_check
+        run: |
+          if [[ -z $(git status --porcelain) ]]; then
+            echo "::set-output name=has_changes::false"
+          else
+            echo "::set-output name=has_changes::true"
+          fi
+
+      - name: Commit and push changes
+        if: steps.git_check.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "guymeltzer28@gmail.com"
+          git config --local user.name "guymeltzer"
+
+          git add docker-compose.yml
+          git commit -m "Update ${{ github.event.inputs.service_name }} image to ${{ github.event.inputs.image }}"
+          git push origin main
   Deploy:
     name: Deploy a Netflix stack service
     needs: UpdateComposeYaml
@@ -49,21 +76,21 @@ jobs:
           script: |
             repo_dir=NetflixMovieCatalog_${GITHUB_RUN_ID}
             rm -rf $repo_dir
-
+            
             # Clone the full repository URL
             git clone https://github.com/${{ github.repository }}.git $repo_dir
             cd $repo_dir
-
+            
             # Set the correct service name for Docker Compose
             service_name=${{ needs.UpdateComposeYaml.outputs.service_name }}
-
+            
             # Ensure AWS credentials are available when running Docker Compose
             export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
             export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
             export AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}
-
+            
             docker rm -v -f $(docker ps -qa)
             # Run the Docker Compose service
             docker compose up -d $service_name
-
+            
             echo "Deploy completed."

@@ -52,8 +52,6 @@ jobs:
             -var "ssh_public_key=$SSH_PUBLIC_KEY" \
             -var-file=${{ github.event.inputs.environment }}.tfvars
         working-directory: terraform
-#
-
 
       - name: Terraform Apply
         env:
