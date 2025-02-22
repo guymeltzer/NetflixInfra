@@ -95,6 +95,9 @@ jobs:
             export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
             export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
             export AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+            AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }} \
             
             # Optional: Debug AWS credentials on EC2
             echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"
