@@ -67,6 +67,12 @@ jobs:
           EC2_PUBLIC_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=guy-netflix-infra-tfstate-*" --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
           echo "EC2_PUBLIC_IP=${EC2_PUBLIC_IP}" >> $GITHUB_OUTPUT
 
+      - name: Debug AWS credentials
+        run: |
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          echo "AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}"
+
       - name: Update the Docker Compose project in the EC2
         uses: appleboy/ssh-action@master
         with:
