@@ -27,7 +27,7 @@ services:
       MOVIE_CATALOG_SERVICE: http://netflix-catalog:8080
 
   netflix-catalog:
-    image: guymeltzer/netflix-movie-catalog:17
+    image: guymeltzer/netflix-movie-catalog:19
     container_name: netflix-catalog
     networks:
       - private_network
