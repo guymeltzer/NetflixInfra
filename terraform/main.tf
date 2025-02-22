@@ -15,25 +15,59 @@ terraform {
   }
 }
 
+module "netflix_app_vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.8.1"
+
+  name = "guy-netflix-vpc"
+  cidr = "10.0.0.0/16"
+
+  azs             = data.aws_availability_zones.available_azs.names
+  private_subnets = ["10.0.0.0/28", "10.0.0.32/28"]
+  public_subnets  = ["10.0.1.0/28", "10.0.2.0/28"]
+
+  enable_nat_gateway = true
+
+
+  tags = {
+    Env = var.env
+  }
+}
 
 provider "aws" {
-  region     = var.region
+  region = var.region
+}
+
+data "aws_availability_zones" "available_azs" {
+  state = "available"
 }
 
 resource "aws_key_pair" "netflix_key" {
-  key_name   = "netflix_key"                         # Name of the key pair
+  key_name   = "netflix_key"        # Name of the key pair
   public_key = file("./id_rsa.pub") # Path to the public key file
 }
 
+data "aws_ami" "ubuntu_ami" {
+  most_recent = true
+  owners      = ["099720109477"]  # Canonical owner ID for Ubuntu AMIs
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+}
+
 resource "aws_instance" "netflix_app" {
-  ami             = var.ami_id
-  instance_type   = "t3.micro"
-  key_name        = aws_key_pair.netflix_key.key_name
-  user_data       = file("./deploy.sh")
-  security_groups = [aws_security_group.netflix_app_sg.name]
+  ami                    = data.aws_ami.ubuntu_ami.id
+  instance_type          = "t3.micro"
+  key_name               = aws_key_pair.netflix_key.key_name
+  user_data              = file("./deploy.sh")
+  vpc_security_group_ids = [aws_security_group.netflix_app_sg.id]
+  subnet_id              = module.netflix_app_vpc.public_subnets[0]
+  associate_public_ip_address = true  # Add this line
 
   tags = {
-    Name      = "guy-netflix-infra-tfstate${var.env}"
+    Name      = "guy-netflix-infra-tfstate-${var.env}"
     Terraform = "Owned"
     Env       = var.env
   }
@@ -42,6 +76,7 @@ resource "aws_instance" "netflix_app" {
 resource "aws_security_group" "netflix_app_sg" {
   name        = "guy-netflix-stack-sg"
   description = "Allow SSH and HTTP traffic"
+  vpc_id      = module.netflix_app_vpc.vpc_id
 
   ingress {
     from_port   = 22
@@ -94,3 +129,5 @@ resource "aws_volume_attachment" "netflix_data_attach" {
   volume_id   = aws_ebs_volume.netflix_data.id
   instance_id = aws_instance.netflix_app.id
 }
+
+
