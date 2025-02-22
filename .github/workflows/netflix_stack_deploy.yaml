@@ -17,35 +17,8 @@ permissions:
 
 jobs:
   UpdateComposeYaml:
-    runs-on: ubuntu-latest
-    outputs:
-      service_name: ${{ github.event.inputs.service_name }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # ... (keep this job as is)
 
-      - name: Update docker-compose.yml
-        run: |
-          yq e ".services.${{ github.event.inputs.service_name }}.image = \"${{ github.event.inputs.image }}\"" -i docker-compose.yml
-
-      - name: Check for changes
-        id: git_check
-        run: |
-          if [[ -z $(git status --porcelain) ]]; then
-            echo "::set-output name=has_changes::false"
-          else
-            echo "::set-output name=has_changes::true"
-          fi
-
-      - name: Commit and push changes
-        if: steps.git_check.outputs.has_changes == 'true'
-        run: |
-          git config --local user.email "guymeltzer28@gmail.com"
-          git config --local user.name "guymeltzer"
-
-          git add docker-compose.yml
-          git commit -m "Update ${{ github.event.inputs.service_name }} image to ${{ github.event.inputs.image }}"
-          git push origin main
   Deploy:
     name: Deploy a Netflix stack service
     needs: UpdateComposeYaml
@@ -53,15 +26,24 @@ jobs:
     steps:
       - name: Checkout the repo code
         uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+
+      - name: Get EC2 public IP
+        id: get_ec2_ip
+        run: |
+          EC2_PUBLIC_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=guy-netflix-infra-tfstate-*" --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
+          echo "EC2_PUBLIC_IP=${EC2_PUBLIC_IP}" >> $GITHUB_OUTPUT
+
       - name: Update the Docker Compose project in the EC2
-        env:
-          EC2_PUBLIC_IP: "13.60.203.203"
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ env.EC2_PUBLIC_IP }}
+          host: ${{ steps.get_ec2_ip.outputs.EC2_PUBLIC_IP }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
@@ -76,9 +58,9 @@ jobs:
             service_name=${{ needs.UpdateComposeYaml.outputs.service_name }}
 
             # Ensure AWS credentials are available when running Docker Compose
-            export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-            export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-            export AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+            export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            export AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}
 
             docker rm -v -f $(docker ps -qa)
             # Run the Docker Compose service

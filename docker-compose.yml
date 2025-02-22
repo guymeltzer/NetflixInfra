@@ -31,7 +31,7 @@ services:
     container_name: netflix-catalog
     networks:
       - private_network
-    volumes:
+    volumes:c
       - catalog-data:/data
     environment:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}

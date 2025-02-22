@@ -67,7 +67,7 @@ resource "aws_instance" "netflix_app" {
   associate_public_ip_address = true  # Add this line
 
   tags = {
-    Name      = "guy-netflix-infra-tfstate-${var.env}"
+    Name      = "guy-netflix-${var.env}"
     Terraform = "Owned"
     Env       = var.env
   }
