@@ -56,6 +56,9 @@ jobs:
       - name: Update the Docker Compose project in the EC2
         env:
           EC2_PUBLIC_IP: "13.60.203.203"
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.EC2_PUBLIC_IP }}
@@ -64,16 +67,21 @@ jobs:
           script: |
             repo_dir=NetflixMovieCatalog_${GITHUB_RUN_ID}
             rm -rf $repo_dir
-            
+
             # Clone the full repository URL
             git clone https://github.com/${{ github.repository }}.git $repo_dir
             cd $repo_dir
 
             # Set the correct service name for Docker Compose
             service_name=${{ needs.UpdateComposeYaml.outputs.service_name }}
-            
+
+            # Ensure AWS credentials are available when running Docker Compose
+            export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+            export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+            export AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+
             docker rm -v -f $(docker ps -qa)
             # Run the Docker Compose service
             docker compose up -d $service_name
-        
+
             echo "Deploy completed."

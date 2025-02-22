@@ -33,6 +33,10 @@ services:
       - private_network
     volumes:
       - catalog-data:/data
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
     command: >
       sh -c "
         apt-get update && 
