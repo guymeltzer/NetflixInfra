@@ -1,5 +1,3 @@
 env    = "prod"
 region = "eu-north-1"
 ami_id = "ami-09a9858973b288bdd"
-secret_name  = "guy-netflix-bot-token"
-secret_value = "your-secret-value"

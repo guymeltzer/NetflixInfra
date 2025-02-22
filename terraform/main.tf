@@ -43,14 +43,6 @@ provider "aws" {
   secret_key = var.AWS_SECRET_ACCESS_KEY
 }
 
-resource "aws_secretsmanager_secret" "bot_token" {
-  name = var.secret_name
-}
-
-resource "aws_secretsmanager_secret_version" "bot_token" {
-  secret_id     = aws_secretsmanager_secret.bot_token.id
-  secret_string = var.secret_value
-}
 
 variable "ssh_public_key" {
   type = string
