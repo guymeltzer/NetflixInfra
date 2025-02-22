@@ -46,6 +46,7 @@ jobs:
           git add docker-compose.yml
           git commit -m "Update ${{ github.event.inputs.service_name }} image to ${{ github.event.inputs.image }}"
           git push origin main
+
   Deploy:
     name: Deploy a Netflix stack service
     needs: UpdateComposeYaml
@@ -95,8 +96,13 @@ jobs:
             export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
             export AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}
             
+            # Optional: Debug AWS credentials on EC2
+            echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"
+            echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
+            echo "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION"
+            
             docker rm -v -f $(docker ps -qa)
             # Run the Docker Compose service
-            docker compose up -d $service_name
+            docker-compose up -d $service_name
             
             echo "Deploy completed."
