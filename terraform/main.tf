@@ -73,7 +73,43 @@ resource "aws_iam_role" "netflix_app_role" {
   })
 }
 
+# IAM Policy
+resource "aws_iam_policy" "netflix_app_policy" {
+  name        = "guy-netflix-app-policy"
+  description = "Policy for EC2 Netflix application to access AWS services"
 
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = ["s3:ListBucket", "s3:GetObject", "s3:PutObject"],
+        Resource = ["arn:aws:s3:::guy-netflix-*", "arn:aws:s3:::guy-netflix-*/*"]
+      },
+      {
+        Effect   = "Allow",
+        Action   = ["ec2:DescribeInstances", "ec2:DescribeVolumes"],
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow",
+        Action   = ["logs:CreateLogStream", "logs:PutLogEvents"],
+        Resource = "arn:aws:logs:eu-north-1:352708296901:*"
+      },
+      {
+        Effect   = "Allow",
+        Action   = ["ssm:GetParameter", "ssm:PutParameter"],
+        Resource = "arn:aws:ssm:eu-north-1:352708296901:parameter/*"
+      }
+    ]
+  })
+}
+
+# Attach IAM Policy to Role
+resource "aws_iam_role_policy_attachment" "netflix_app_role_attachment" {
+  role       = aws_iam_role.netflix_app_role.name
+  policy_arn = aws_iam_policy.netflix_app_policy.arn
+}
 
 # IAM Instance Profile
 resource "aws_iam_instance_profile" "netflix_app_profile" {
@@ -89,7 +125,7 @@ resource "aws_instance" "netflix_app" {
   vpc_security_group_ids = [aws_security_group.netflix_app_sg.id]
   subnet_id              = module.netflix_app_vpc.public_subnets[0]
   associate_public_ip_address = true
-  iam_instance_profile   = aws_iam_instance_profile.netflix_app_profile.name  # Attach IAM role
+  iam_instance_profile   = aws_iam_instance_profile.netflix_app_profile.name
 
   tags = {
     Name      = "guy-netflix-${var.env}"
