@@ -28,7 +28,6 @@ module "netflix_app_vpc" {
 
   enable_nat_gateway = true
 
-
   tags = {
     Env = var.env
   }
@@ -43,18 +42,104 @@ data "aws_availability_zones" "available_azs" {
 }
 
 resource "aws_key_pair" "netflix_key" {
-  key_name   = "netflix_key"        # Name of the key pair
-  public_key = file("./id_rsa.pub") # Path to the public key file
+  key_name   = "netflix_key"
+  public_key = file("./id_rsa.pub")
 }
 
 data "aws_ami" "ubuntu_ami" {
   most_recent = true
-  owners      = ["099720109477"]  # Canonical owner ID for Ubuntu AMIs
+  owners      = ["099720109477"]
 
   filter {
     name   = "name"
     values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
   }
+}
+
+# IAM Role for EC2
+resource "aws_iam_role" "netflix_app_role" {
+  name = "guy-tff-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+# IAM Policy for DynamoDB
+resource "aws_iam_policy" "dynamodb_policy" {
+  name        = "dynamodb-access-policy"
+  description = "Policy to allow DynamoDB access"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = [
+          "dynamodb:BatchGetItem",
+          "dynamodb:BatchWriteItem",
+          "dynamodb:ConditionCheckItem",
+          "dynamodb:PutItem",
+          "dynamodb:DescribeTable",
+          "dynamodb:GetItem",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# IAM Policy for S3 Access
+resource "aws_iam_policy" "s3_policy" {
+  name        = "s3-access-policy"
+  description = "Policy to allow S3 access"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket"
+        ],
+        Resource = [
+          "arn:aws:s3:::guy-polybot-docker-bucket",
+          "arn:aws:s3:::guy-polybot-docker-bucket/*"
+        ]
+      }
+    ]
+  })
+}
+
+# Attach Policies to the IAM Role
+resource "aws_iam_role_policy_attachment" "attach_dynamodb_policy" {
+  policy_arn = aws_iam_policy.dynamodb_policy.arn
+  role       = aws_iam_role.netflix_app_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "attach_s3_policy" {
+  policy_arn = aws_iam_policy.s3_policy.arn
+  role       = aws_iam_role.netflix_app_role.name
+}
+
+# IAM Instance Profile
+resource "aws_iam_instance_profile" "netflix_app_profile" {
+  name = "netflix-instance-profile"
+  role = aws_iam_role.netflix_app_role.name
 }
 
 resource "aws_instance" "netflix_app" {
@@ -64,7 +149,8 @@ resource "aws_instance" "netflix_app" {
   user_data              = file("./deploy.sh")
   vpc_security_group_ids = [aws_security_group.netflix_app_sg.id]
   subnet_id              = module.netflix_app_vpc.public_subnets[0]
-  associate_public_ip_address = true  # Add this line
+  associate_public_ip_address = true
+  iam_instance_profile   = aws_iam_instance_profile.netflix_app_profile.name  # Attach IAM role
 
   tags = {
     Name      = "guy-netflix-${var.env}"
@@ -136,26 +222,8 @@ resource "aws_ebs_volume" "netflix_data" {
   }
 }
 
-resource "aws_iam_role" "netflix_app_role" {
-  name = "guy-tff-role"
-  assume_role_policy = jsonencode({
-    "Version" = "2012-10-17",
-    "Statement" = [
-      {
-        "Effect" = "Allow",
-        "Principal" = {
-          "Service" = "ec2.amazonaws.com"
-        },
-        "Action" = "sts:AssumeRole"
-      }
-    ]
-  })
-}
-
 resource "aws_volume_attachment" "netflix_data_attach" {
   device_name = "/dev/xvdf"
   volume_id   = aws_ebs_volume.netflix_data.id
   instance_id = aws_instance.netflix_app.id
 }
-
-
