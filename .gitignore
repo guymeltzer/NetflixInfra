@@ -5,3 +5,4 @@ crash.log
 override.tf
 override.tf.json
 terraform.tfstate.backup
+.env
