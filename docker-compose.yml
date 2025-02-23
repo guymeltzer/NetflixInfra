@@ -33,17 +33,9 @@ services:
       - private_network
     volumes:
       - catalog-data:/data
-    env_file:
-      - .env
-    environment:
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+
     command: >
       sh -c "
-        echo 'AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}' &&
-        echo 'AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}' &&
-        echo 'AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}' &&
         apt-get update && 
         apt-get install -y python3-pip && 
         pip3 install boto3 && 

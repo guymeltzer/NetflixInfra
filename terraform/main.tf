@@ -73,68 +73,7 @@ resource "aws_iam_role" "netflix_app_role" {
   })
 }
 
-# IAM Policy for DynamoDB
-resource "aws_iam_policy" "dynamodb_policy" {
-  name        = "dynamodb-access-policy"
-  description = "Policy to allow DynamoDB access"
 
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect   = "Allow",
-        Action   = [
-          "dynamodb:BatchGetItem",
-          "dynamodb:BatchWriteItem",
-          "dynamodb:ConditionCheckItem",
-          "dynamodb:PutItem",
-          "dynamodb:DescribeTable",
-          "dynamodb:GetItem",
-          "dynamodb:Query",
-          "dynamodb:Scan",
-          "dynamodb:UpdateItem",
-          "dynamodb:DeleteItem"
-        ],
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-# IAM Policy for S3 Access
-resource "aws_iam_policy" "s3_policy" {
-  name        = "s3-access-policy"
-  description = "Policy to allow S3 access"
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect   = "Allow",
-        Action   = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket"
-        ],
-        Resource = [
-          "arn:aws:s3:::guy-polybot-docker-bucket",
-          "arn:aws:s3:::guy-polybot-docker-bucket/*"
-        ]
-      }
-    ]
-  })
-}
-
-# Attach Policies to the IAM Role
-resource "aws_iam_role_policy_attachment" "attach_dynamodb_policy" {
-  policy_arn = aws_iam_policy.dynamodb_policy.arn
-  role       = aws_iam_role.netflix_app_role.name
-}
-
-resource "aws_iam_role_policy_attachment" "attach_s3_policy" {
-  policy_arn = aws_iam_policy.s3_policy.arn
-  role       = aws_iam_role.netflix_app_role.name
-}
 
 # IAM Instance Profile
 resource "aws_iam_instance_profile" "netflix_app_profile" {
