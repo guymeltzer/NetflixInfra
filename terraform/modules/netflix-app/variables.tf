@@ -3,7 +3,7 @@ variable "env" {
   type        = string
 }
 
-variable "region" {
+variable "aws_region" {  # Changed to match the main project
   description = "AWS region"
   type        = string
 }
@@ -13,14 +13,19 @@ variable "ami_id" {
   type        = string
 }
 
+variable "vpc_id" {
+  description = "VPC ID"
+  type        = string
+}
+
+variable "subnet_id" {
+  description = "Subnet ID"
+  type        = string
+}
+
 variable "subnet_cidr" {
   description = "Subnet CIDR"
   type        = list(string)
-}
-
-variable "aws_region" {  # Changed to match the main project
-  description = "AWS region"
-  type        = string
 }
 
 variable "vpc_cidr" {
@@ -34,6 +39,6 @@ variable "instance_type" {
 }
 
 variable "bucket_name" {
-    description = "S3 bucket name"
-    type        = string
+  description = "S3 bucket name"
+  type        = string
 }

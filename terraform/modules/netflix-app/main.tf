@@ -1,49 +1,10 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">=5.55"
-    }
-  }
-
-  required_version = ">= 1.7.0"
-
-  backend "s3" {
-    bucket = "guy-netflix-infra-tfstate"
-    key    = "tfstate.json"
-    region = "eu-north-1"
-  }
-}
-
-module "netflix_app_vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "5.8.1"
-
-  name = "guy-netflix-vpc"
-  cidr = var.vpc_cidr
-
-  azs             = data.aws_availability_zones.available_azs.names
-  private_subnets = ["10.0.0.0/28", "10.0.0.32/28"]
-  public_subnets  = ["10.0.1.0/28", "10.0.2.0/28"]
-
-  enable_nat_gateway = true
-
-  tags = {
-    Env = var.env
-  }
-}
-
-provider "aws" {
-  region = var.region
-}
-
-data "aws_availability_zones" "available_azs" {
-  state = "available"
-}
-
 resource "aws_key_pair" "netflix_key" {
   key_name   = "netflix_key"
   public_key = file("./id_rsa.pub")
+}
+
+provider "aws" {
+  region = var.aws_region
 }
 
 data "aws_ami" "ubuntu_ami" {
@@ -56,7 +17,6 @@ data "aws_ami" "ubuntu_ami" {
   }
 }
 
-# IAM Role for EC2
 resource "aws_iam_role" "netflix_app_role" {
   name = "guy-tff-role"
   assume_role_policy = jsonencode({
@@ -73,7 +33,6 @@ resource "aws_iam_role" "netflix_app_role" {
   })
 }
 
-# IAM Policy
 resource "aws_iam_policy" "netflix_app_policy" {
   name        = "guy-netflix-app-policy"
   description = "Policy for EC2 Netflix application to access AWS services"
@@ -94,38 +53,40 @@ resource "aws_iam_policy" "netflix_app_policy" {
       {
         Effect   = "Allow",
         Action   = ["logs:CreateLogStream", "logs:PutLogEvents"],
-        Resource = "arn:aws:logs:eu-north-1:352708296901:*"
+        Resource = "arn:aws:logs:${var.region}:352708296901:*"
       },
       {
         Effect   = "Allow",
         Action   = ["ssm:GetParameter", "ssm:PutParameter"],
-        Resource = "arn:aws:ssm:eu-north-1:352708296901:parameter/*"
+        Resource = "arn:aws:ssm:${var.region}:352708296901:parameter/*"
       }
     ]
   })
 }
 
-# Attach IAM Policy to Role
 resource "aws_iam_role_policy_attachment" "netflix_app_role_attachment" {
   role       = aws_iam_role.netflix_app_role.name
   policy_arn = aws_iam_policy.netflix_app_policy.arn
 }
 
-# IAM Instance Profile
 resource "aws_iam_instance_profile" "netflix_app_profile" {
   name = "netflix-instance-profile"
   role = aws_iam_role.netflix_app_role.name
 }
 
 resource "aws_instance" "netflix_app" {
-  ami                    = data.aws_ami.ubuntu_ami.id
-  instance_type          = "t3.micro"
-  key_name               = aws_key_pair.netflix_key.key_name
-  user_data              = file("./deploy.sh")
-  vpc_security_group_ids = [aws_security_group.netflix_app_sg.id]
-  subnet_id              = module.netflix_app_vpc.public_subnets[0]
+  ami                         = var.ami_id
+  instance_type               = var.instance_type
+  key_name                    = aws_key_pair.netflix_key.key_name
+  user_data                   = file("./deploy.sh")
+  vpc_security_group_ids      = [aws_security_group.netflix_app_sg.id]
+  subnet_id                   = var.subnet_id
   associate_public_ip_address = true
-  iam_instance_profile   = aws_iam_instance_profile.netflix_app_profile.name
+  iam_instance_profile        = aws_iam_instance_profile.netflix_app_profile.name
+  subnet_cidr                 = var.subnet_cidr
+  aws_region                  = var.aws_region
+  vpc_cidr                    = var.vpc_cidr
+  bucket_name                 = var.bucket_name
 
   tags = {
     Name      = "guy-netflix-${var.env}"
@@ -134,10 +95,18 @@ resource "aws_instance" "netflix_app" {
   }
 }
 
+resource "aws_subnet" "subnet" {
+  count = length(var.subnet_cidr)
+
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.subnet_cidr[count.index]
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
+  map_public_ip_on_launch = true
+
 resource "aws_security_group" "netflix_app_sg" {
   name        = "guy-netflix-stack-sg"
   description = "Allow SSH and HTTP traffic"
-  vpc_id      = module.netflix_app_vpc.vpc_id
+  vpc_id      = var.vpc_id
 
   ingress {
     from_port   = 22
