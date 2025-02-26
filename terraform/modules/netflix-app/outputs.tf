@@ -7,3 +7,7 @@ output "instance_public_ip" {
   description = "Public IP address of the EC2 instance"
   value       = aws_instance.netflix_app.public_ip
 }
+
+output "ami_id" {
+  value = data.aws_ami.ubuntu_ami.id
+}

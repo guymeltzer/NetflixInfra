@@ -1,12 +1,3 @@
-resource "aws_key_pair" "netflix_key" {
-  key_name   = "netflix_key"
-  public_key = file("./id_rsa.pub")
-}
-
-provider "aws" {
-  region = var.aws_region
-}
-
 data "aws_ami" "ubuntu_ami" {
   most_recent = true
   owners      = ["099720109477"]
@@ -33,6 +24,11 @@ resource "aws_iam_role" "netflix_app_role" {
   })
 }
 
+resource "aws_key_pair" "netflix_key" {
+  key_name   = "netflix_key"
+  public_key = file(var.public_key_path)
+}
+
 resource "aws_iam_policy" "netflix_app_policy" {
   name        = "guy-netflix-app-policy"
   description = "Policy for EC2 Netflix application to access AWS services"
@@ -53,12 +49,12 @@ resource "aws_iam_policy" "netflix_app_policy" {
       {
         Effect   = "Allow",
         Action   = ["logs:CreateLogStream", "logs:PutLogEvents"],
-        Resource = "arn:aws:logs:${var.region}:352708296901:*"
+        Resource = "arn:aws:logs:${var.aws_region}:*:*"
       },
       {
         Effect   = "Allow",
         Action   = ["ssm:GetParameter", "ssm:PutParameter"],
-        Resource = "arn:aws:ssm:${var.region}:352708296901:parameter/*"
+        Resource = "arn:aws:ssm:${var.aws_region}:*:parameter/*"
       }
     ]
   })
@@ -75,18 +71,14 @@ resource "aws_iam_instance_profile" "netflix_app_profile" {
 }
 
 resource "aws_instance" "netflix_app" {
-  ami                         = var.ami_id
+  ami                         = data.aws_ami.ubuntu_ami.id
   instance_type               = var.instance_type
   key_name                    = aws_key_pair.netflix_key.key_name
-  user_data                   = file("./deploy.sh")
+  user_data                   = file("${path.module}/deploy.sh")
   vpc_security_group_ids      = [aws_security_group.netflix_app_sg.id]
   subnet_id                   = var.subnet_id
   associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.netflix_app_profile.name
-  subnet_cidr                 = var.subnet_cidr
-  aws_region                  = var.aws_region
-  vpc_cidr                    = var.vpc_cidr
-  bucket_name                 = var.bucket_name
 
   tags = {
     Name      = "guy-netflix-${var.env}"
@@ -94,14 +86,6 @@ resource "aws_instance" "netflix_app" {
     Env       = var.env
   }
 }
-
-resource "aws_subnet" "subnet" {
-  count = length(var.subnet_cidr)
-
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.subnet_cidr[count.index]
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-  map_public_ip_on_launch = true
 
 resource "aws_security_group" "netflix_app_sg" {
   name        = "guy-netflix-stack-sg"

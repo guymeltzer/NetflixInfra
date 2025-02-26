@@ -59,10 +59,16 @@ services:
     user: "472"
     networks:
       - private_network2
+    environment:
+      - GF_LOG_LEVEL=debug
+      - GF_LOG_FILTERS=provisioning:debug
     ports:
       - "3001:3000"
     volumes:
       - grafana-data:/var/lib/grafana
+      - /home/ubuntu/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - /home/ubuntu/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - /home/ubuntu/default_dashboard.json:/etc/grafana/provisioning/dashboards/default_dashboard.json:ro
 
   availability-agent:
     image: guymeltzer/availability_agent:1.0.0

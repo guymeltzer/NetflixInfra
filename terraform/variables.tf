@@ -8,23 +8,8 @@ variable "region" {
   type        = string
 }
 
-variable "ami_id" {
-  description = "EC2 Ubuntu AMI"
-  type        = string
-}
-
-variable "subnet_cidr" {
-  description = "Subnet CIDR"
-  type        = list(string)
-}
-
-variable "aws_region" {  # Changed to match the main project
-  description = "AWS region"
-  type        = string
-}
-
 variable "vpc_cidr" {
-  description = "CIDR block for the VPN subnet"
+  description = "CIDR block for the VPC"
   type        = string
 }
 
@@ -34,6 +19,16 @@ variable "instance_type" {
 }
 
 variable "bucket_name" {
-    description = "S3 bucket name"
-    type        = string
+  description = "S3 bucket name"
+  type        = string
+}
+
+variable "public_key_path" {
+  description = "Path to the public key file"
+  type        = string
+}
+
+variable "subnet_cidr" {
+  description = "Subnet CIDR blocks"
+  type        = list(string)
 }
