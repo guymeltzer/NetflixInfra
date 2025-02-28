@@ -22,9 +22,14 @@ sudo systemctl enable docker
 # Install Docker Compose
 sudo curl -L "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
+sudo mkdir -p /mnt/ebs
+sudo mkfs -t ext4 /dev/xvdf
+sudo mount /dev/xvdf /mnt/ebs
 
 # Create necessary directories for volumes
 sudo mkdir -p /mnt/ebs/catalog-data /mnt/ebs/prometheus-data /mnt/ebs/grafana-data
+# Change ownership of grafana-data directory to user ID 472
+sudo chown -R 472:472 /mnt/ebs/grafana-data
 
 # Create prometheus.yml file
 cat << EOF > /home/ubuntu/prometheus.yml
@@ -243,6 +248,8 @@ sudo cp /home/ubuntu/default_dashboard.json ./default_dashboard.json
 sudo cp /home/ubuntu/docker-compose.yml ./docker-compose.yml
 sudo chown -R 472:472 ./datasources.yml ./dashboards.yml ./default_dashboard.json
 sudo chown 472:472 /home/ubuntu/datasources.yml /home/ubuntu/dashboards.yml /home/ubuntu/default_dashboard.json
+sudo docker volume create grafana-data
+sudo chown -R 472:472 /var/lib/docker/volumes/grafana-data/_data
 
 # Log in to Docker Hub
 echo "Candy2025!" | docker login -u "guymeltzer" --password-stdin
